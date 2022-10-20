@@ -4,76 +4,83 @@ import { client } from "../infra/prisma/cliente";
 export default class ArtistaController {
     static async List(request: Request, response: Response) {
         try {
-            const { id, skip, take } = request.query;
-        if (id) {
-            const musica = await client.artista.findMany({
-                where: {
-                    id: Number(id)
-                },
-                orderBy: {
-                    id: 'asc'
-                }
-            });
-            if (musica[0]) {
-                return response.json(musica[0]);
-            } else {
-                return response.json(
-                    {
-                        "msg" : "Not Found"
+            let { id, skip, take } = request.query;
+            skip = skip && String(skip).trim() != '' ? String(skip).trim() : '0';
+            take = take && String(take).trim() != '' ? String(take).trim() : '20';
+
+            let resposta = {}
+            
+            if (id) {
+                let artista = await client.artista.findMany({
+
+                    where: {
+                        id: Number(id)
+                    },
+                    orderBy: {
+                        id: 'asc'
                     }
-                );
-            };
-        } else {
-            if (skip && take) {
-                const musica = await client.artista.findMany({
+                });
+                if (artista[0]) {
+                    resposta = artista[0];
+                } else {
+                    resposta = {
+                        mensagem: "Não encontrado"
+                    }
+                    return response.status(406).json(resposta);   
+                };
+
+            } else {
+                const artistas = await client.artista.findMany({
                     skip: Number(skip),
                     take: Number(take),
                 });
-                if (musica[0]) {
-                    return response.json(musica[0]);
+                if (artistas) {
+                    resposta = {
+                        totalizadores: {
+                            totalLinhas: artistas.length,
+                            skip,
+                            take,
+                        },
+                        dados: artistas
+                    };
+
                 } else {
-                    return response.json(
-                        {
-                            "msg" : "Not Found"
-                        }
-                    );
+                    resposta = {
+                        mensagem: "Not Found"
+                    }
+                    return response.status(406).json(resposta);   
                 };
             }
-        }
-        const musica = await client.artista.findMany({
-            orderBy: {
-                id: 'asc'
+            
+
+            return response.json(resposta);   
+
+            } catch (error) {
+                return response.status(500).json(
+                    {
+                        mensagem: error
+                    }
+                );
             }
-        });
-        return response.json(musica);   
-        } catch (error) {
-            return response.json(
-                {
-                    "msg" : error
-                }
-            );
-        }
     };
 
     static async Create(request: Request, response: Response) {
         const data = request.body;
         try {
-            const musica = await client.artista.create({
+            const artista = await client.artista.create({
                 data: {
                     nome: data.nome
                 }
             });
-            if (musica) {
+            if (artista) {
                 return response.json(
-                    {
-                        "msg" : "Successes"
-                    }
+                    artista
                 );
             }  
         } catch (error) {
-            return response.json(
+            return response.status(500).json(
                 {
-                    "msg" : error
+                    mensagem: error
                 }
             );
         };
@@ -82,7 +89,7 @@ export default class ArtistaController {
     static async Update(request: Request, response: Response) {
         try {
             const data = request.body;
-            const updataMusica = await client.artista.update({
+            const updateArtista = await client.artista.update({
                 where: {
                     id: Number(data.id)
                 },
@@ -90,17 +97,20 @@ export default class ArtistaController {
                     nome: data.nome
                 }
             });
-            if (updataMusica) {
-                return response.json(
-                    {
-                        "msg" : "Successes"
-                    }
-                );
+            if (updateArtista) {
+                let resposta = {
+                    totalizadores: {
+                        totalLinhas: 1,
+                    },
+                    dados: updateArtista
+                };
+
+                return response.json(resposta);
             };
         } catch (error) {
-            return response.json(
+            return response.status(500).json(
                 {
-                    "msg" : "Fail"
+                    mensagem: error
                 }
             );
         };
@@ -110,23 +120,29 @@ export default class ArtistaController {
         const { id } = request.query;
         try {
             if (id) {
-                const deleteMusica = await client.artista.delete({
+                const deleteArtista = await client.artista.delete({
                     where: {
                         id: Number(id)
                     }
                 })
-                if (deleteMusica) {
-                    return response.json(
+                if (deleteArtista) {
+                    return response.status(202).json(
                         {
-                            "msg" : "Successes"
+                            mensagem: "Sucesso"
                         }
                     );
                 };
+            }else{
+                return response.status(406).json(
+                    {
+                        mensagem: "Não encontrado"
+                    }
+                );
             };
         } catch (error) {
-            return response.json(
+            return response.status(500).json(
                 {
-                    "msg" : error
+                    mensagem: error
                 }
             );
         };
