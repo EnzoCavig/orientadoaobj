@@ -63,43 +63,84 @@ export default class AlbumController {
     };
     static async Create(request: Request, response: Response) {
         const data = request.body;
-        try {
-            const album = await client.album.create({
-                data: {
-                    nome: data.nome,
-                    ano: Number(data.ano),
-                    artista_id: Number(data.artista_id)
-                }
-            });
-            if (album) {
-                return response.json(
-                    album
-                );
-            }  
-        } catch (error) {
-            return response.status(500).json(
+
+        if (!data.nome){
+            return response.status(400).json(
                 {
-                    mensagem: error
+                    mensagem: "O campo nome é obrigatório."
+                }
+            );    
+        }else if (!data.ano){
+            return response.status(400).json(
+                {
+                    mensagem: "O campo ano é obrigatório."
                 }
             );
-        };
+        }else if (!data.artista_id){
+            return response.status(400).json(
+                {
+                    mensagem: "O campo artista_id é obrigatório."
+                }
+            );
+        }else{
+            try {
+                const album = await client.album.create({
+                    data: {
+                        nome: data.nome,
+                        ano: Number(data.ano),
+                        artista_id: Number(data.artista_id)
+                    }
+                });
+                if (album) {
+                    return response.json(
+                        album
+                    );
+                }  
+            } catch (error) {
+                return response.status(500).json(
+                    {
+                        mensagem: error
+                    }
+                );
+            };
+        }
     };
     static async Update(request: Request, response: Response) {
         try {
             const data = request.body;
-            const updateAlbum = await client.album.update({
-                where: {
-                    id: Number(data.id)
-                },
-                data: {
-                    nome: data.nome,
-                    ano: Number(data.ano),
-                    artista_id: Number(data.artista_id)
-                }
-            });
-            if (updateAlbum) {
-                return response.json(updateAlbum);
-            };
+            if (!data.nome){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo nome é obrigatório."
+                    }
+                );    
+            }else if (!data.ano){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo ano é obrigatório."
+                    }
+                );
+            }else if (!data.artista_id){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo artista_id é obrigatório."
+                    }
+                );
+            }else{
+                const updateAlbum = await client.album.update({
+                    where: {
+                        id: Number(data.id)
+                    },
+                    data: {
+                        nome: data.nome,
+                        ano: Number(data.ano),
+                        artista_id: Number(data.artista_id)
+                    }
+                });
+                if (updateAlbum) {
+                    return response.json(updateAlbum);
+                };
+            }
         } catch (error) {
             return response.status(500).json(
                 {
@@ -109,10 +150,10 @@ export default class AlbumController {
         };
     };
     static async Delete(request: Request, response: Response) {
-        const { id } = request.query;
         try {
+            const { id } = request.query;
             if (id) {
-                const deleteAlbum = await client.artista.delete({
+                const deleteAlbum = await client.album.delete({
                     where: {
                         id: Number(id)
                     }

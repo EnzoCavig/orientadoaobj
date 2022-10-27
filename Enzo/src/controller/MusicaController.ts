@@ -49,7 +49,6 @@ export default class MusicaController {
                     return response.status(406).json(resposta);   
                 };
             }
-            
 
             return response.json(resposta);   
 
@@ -65,17 +64,31 @@ export default class MusicaController {
     static async Create(request: Request, response: Response) {
         const data = request.body;
         try {
-            const musica = await client.musicas.create({
-                data: {
-                    nome: data.nome,
-                    album_id: Number(data.album_id)
-                }
-            });
-            if (musica) {
-                return response.json(
-                    musica
+            if (!data.nome){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo nome é obrigatório."
+                    }
+                );    
+            }else if (!data.album_id){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo album_id é obrigatório."
+                    }
                 );
-            }  
+            }else{
+                const musica = await client.musicas.create({
+                    data: {
+                        nome: data.nome,
+                        album_id: Number(data.album_id)
+                    }
+                });
+                if (musica) {
+                    return response.json(
+                        musica
+                    );
+                }  
+            }
         } catch (error) {
             return response.status(500).json(
                 {
@@ -88,18 +101,32 @@ export default class MusicaController {
     static async Update(request: Request, response: Response) {
         try {
             const data = request.body;
-            const updataMusica = await client.musicas.update({
-                where: {
-                    id: Number(data.id)
-                },
-                data: {
-                    nome: data.nome,
-                    album_id: Number(data.album_id)
-                }
-            });
-            if (updataMusica) {
-                return response.json(updataMusica);
-            };
+            if (!data.nome){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo nome é obrigatório."
+                    }
+                );    
+            }else if (!data.album_id){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo album_id é obrigatório."
+                    }
+                );
+            }else{
+                const updateMusica = await client.musicas.update({
+                    where: {
+                        id: Number(data.id)
+                    },
+                    data: {
+                        nome: data.nome,
+                        album_id: Number(data.album_id)
+                    }
+                });
+                if (updateMusica) {
+                    return response.json(updateMusica);
+                };
+            }
         } catch (error) {
             return response.status(500).json(
                 {

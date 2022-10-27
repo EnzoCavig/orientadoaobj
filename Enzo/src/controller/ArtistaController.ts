@@ -50,7 +50,6 @@ export default class ArtistaController {
                 };
             }
             
-
             return response.json(resposta);   
 
             } catch (error) {
@@ -65,16 +64,24 @@ export default class ArtistaController {
     static async Create(request: Request, response: Response) {
         const data = request.body;
         try {
-            const artista = await client.artista.create({
-                data: {
-                    nome: data.nome
-                }
-            });
-            if (artista) {
-                return response.json(
-                    artista
-                );
-            }  
+            if (!data.nome){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo nome é obrigatório."
+                    }
+                );    
+            }else{
+                const artista = await client.artista.create({
+                    data: {
+                        nome: data.nome
+                    }
+                });
+                if (artista) {
+                    return response.json(
+                        artista
+                    );
+                } 
+            } 
         } catch (error) {
             return response.status(500).json(
                 {
@@ -87,17 +94,25 @@ export default class ArtistaController {
     static async Update(request: Request, response: Response) {
         try {
             const data = request.body;
-            const updateArtista = await client.artista.update({
-                where: {
-                    id: Number(data.id)
-                },
-                data: {
-                    nome: data.nome
-                }
-            });
-            if (updateArtista) {
-                return response.json(updateArtista);
-            };
+            if (!data.nome){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo nome é obrigatório."
+                    }
+                );    
+            }else{
+                const updateArtista = await client.artista.update({
+                    where: {
+                        id: Number(data.id)
+                    },
+                    data: {
+                        nome: data.nome
+                    }
+                });
+                if (updateArtista) {
+                    return response.json(updateArtista);
+                };
+            }
         } catch (error) {
             return response.status(500).json(
                 {

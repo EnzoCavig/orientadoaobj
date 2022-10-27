@@ -49,7 +49,6 @@ export default class VendaController {
                     return response.status(406).json(resposta);   
                 };
             }
-            
 
             return response.json(resposta);   
 
@@ -64,17 +63,31 @@ export default class VendaController {
     static async Create(request: Request, response: Response) {
         const data = request.body;
         try {
-            const venda = await client.vendas.create({
-                data: {
-                    album_id: Number(data.album_id),
-                    observacao: data.observacao
-                }
-            });
-            if (venda) {
-                return response.json(
-                    venda
+            if (!data.album_id){
+                return response.status(400).json(
+                    {
+                        mensagem: "O album_id nome é obrigatório."
+                    }
+                );    
+            }else if (!data.observacao){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo observacao é obrigatório."
+                    }
                 );
-            }  
+            }else{
+                const venda = await client.vendas.create({
+                    data: {
+                        album_id: Number(data.album_id),
+                        observacao: data.observacao
+                    }
+                });
+                if (venda) {
+                    return response.json(
+                        venda
+                    );
+                }  
+            }
         } catch (error) {
             return response.status(500).json(
                 {
@@ -86,18 +99,32 @@ export default class VendaController {
     static async Update(request: Request, response: Response) {
         try {
             const data = request.body;
-            const updateVenda = await client.vendas.update({
-                where: {
-                    id: Number(data.id)
-                },
-                data: {
-                    album_id: Number(data.album_id),
-                    observacao: data.observacao
-                }
-            });
-            if (updateVenda) {
-                return response.json(updateVenda);
-            };
+            if (!data.album_id){
+                return response.status(400).json(
+                    {
+                        mensagem: "O album_id nome é obrigatório."
+                    }
+                );    
+            }else if (!data.observacao){
+                return response.status(400).json(
+                    {
+                        mensagem: "O campo observacao é obrigatório."
+                    }
+                );
+            }else{
+                const updateVenda = await client.vendas.update({
+                    where: {
+                        id: Number(data.id)
+                    },
+                    data: {
+                        album_id: Number(data.album_id),
+                        observacao: data.observacao
+                    }
+                });
+                if (updateVenda) {
+                    return response.json(updateVenda);
+                };
+            }
         } catch (error) {
             return response.status(500).json(
                 {
