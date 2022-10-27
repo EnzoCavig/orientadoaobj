@@ -1,58 +1,65 @@
 import { Request, Response } from "express";
 import { client } from "../infra/prisma/cliente";
+import { Resposta } from "../model/Resposta";
 
 export default class MusicaController {
     static async List(request: Request, response: Response) {
         try {
-            const { id, skip, take } = request.query;
-        if (id) {
-            const musica = await client.musicas.findMany({
-                where: {
-                    id: Number(id)
-                },
-                orderBy: {
-                    id: 'asc'
-                }
-            });
-            if (musica[0]) {
-                return response.json(musica[0]);
-            } else {
-                return response.json(
-                    {
-                        "msg" : "Not Found"
+            let { id, skip, take } = request.query;
+            skip = skip && String(skip).trim() != '' ? String(skip).trim() : '0';
+            take = take && String(take).trim() != '' ? String(take).trim() : '20';
+
+            let resposta = new Resposta();
+            resposta.skip = skip;
+            resposta.take = take;
+            
+            if (id) {
+                let musica = await client.musicas.findMany({
+
+                    where: {
+                        id: Number(id)
+                    },
+                    orderBy: {
+                        id: 'asc'
                     }
-                );
-            };
-        } else {
-            if (skip && take) {
-                const musica = await client.musicas.findMany({
+                });
+                if (musica[0]) {
+                    resposta.totalLinhas = 1;
+                    resposta.dados = musica[0];
+                } else {
+                    resposta.dados = {
+                        mensagem: "Não encontrado"
+                    }
+                    return response.status(406).json(resposta);   
+                };
+
+            } else {
+                const musicas = await client.musicas.findMany({
                     skip: Number(skip),
                     take: Number(take),
                 });
-                if (musica[0]) {
-                    return response.json(musica[0]);
+                if (musicas) {
+                    resposta.totalLinhas = musicas.length;
+                    resposta.dados = musicas;
+
                 } else {
-                    return response.json(
-                        {
-                            "msg" : "Not Found"
-                        }
-                    );
+                    resposta.dados = {
+                        mensagem: "Não encontrado"
+                    }
+                    return response.status(406).json(resposta);   
                 };
             }
-        }
-        const musica = await client.musicas.findMany({
-            orderBy: {
-                id: 'asc'
+            
+
+            return response.json(resposta);   
+
+            } catch (error) {
+                return response.status(500).json(
+                    {
+                        mensagem: error
+                    }
+                );
             }
-        });
-        return response.json(musica);   
-        } catch (error) {
-            return response.json(
-                {
-                    "msg" : error
-                }
-            );
-        }
     };
 
     static async Create(request: Request, response: Response) {
@@ -66,15 +73,13 @@ export default class MusicaController {
             });
             if (musica) {
                 return response.json(
-                    {
-                        "msg" : "Successes"
-                    }
+                    musica
                 );
             }  
         } catch (error) {
-            return response.json(
+            return response.status(500).json(
                 {
-                    "msg" : error
+                    mensagem: error
                 }
             );
         };
@@ -93,16 +98,12 @@ export default class MusicaController {
                 }
             });
             if (updataMusica) {
-                return response.json(
-                    {
-                        "msg" : "Successes"
-                    }
-                );
+                return response.json(updataMusica);
             };
         } catch (error) {
-            return response.json(
+            return response.status(500).json(
                 {
-                    "msg" : "Fail"
+                    mensagem: error
                 }
             );
         };
@@ -118,17 +119,23 @@ export default class MusicaController {
                     }
                 })
                 if (deleteMusica) {
-                    return response.json(
+                    return response.status(202).json(
                         {
-                            "msg" : "Successes"
+                            mensagem: "Sucesso"
                         }
                     );
                 };
+            }else{
+                return response.status(406).json(
+                    {
+                        mensagem: "Não encontrado"
+                    }
+                );
             };
         } catch (error) {
-            return response.json(
+            return response.status(500).json(
                 {
-                    "msg" : "Fail"
+                    mensagem: error
                 }
             );
         };

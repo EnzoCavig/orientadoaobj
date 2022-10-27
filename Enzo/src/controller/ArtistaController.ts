@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { client } from "../infra/prisma/cliente";
+import { Resposta } from "../model/Resposta";
 
 export default class ArtistaController {
     static async List(request: Request, response: Response) {
@@ -8,7 +9,9 @@ export default class ArtistaController {
             skip = skip && String(skip).trim() != '' ? String(skip).trim() : '0';
             take = take && String(take).trim() != '' ? String(take).trim() : '20';
 
-            let resposta = {}
+            let resposta = new Resposta();
+            resposta.skip = skip;
+            resposta.take = take;
             
             if (id) {
                 let artista = await client.artista.findMany({
@@ -21,9 +24,10 @@ export default class ArtistaController {
                     }
                 });
                 if (artista[0]) {
-                    resposta = artista[0];
+                    resposta.totalLinhas = 1;
+                    resposta.dados = artista[0];
                 } else {
-                    resposta = {
+                    resposta.dados = {
                         mensagem: "Não encontrado"
                     }
                     return response.status(406).json(resposta);   
@@ -35,18 +39,12 @@ export default class ArtistaController {
                     take: Number(take),
                 });
                 if (artistas) {
-                    resposta = {
-                        totalizadores: {
-                            totalLinhas: artistas.length,
-                            skip,
-                            take,
-                        },
-                        dados: artistas
-                    };
+                    resposta.totalLinhas = artistas.length;
+                    resposta.dados = artistas;
 
                 } else {
-                    resposta = {
-                        mensagem: "Not Found"
+                    resposta.dados = {
+                        mensagem: "Não encontrado"
                     }
                     return response.status(406).json(resposta);   
                 };
@@ -98,14 +96,7 @@ export default class ArtistaController {
                 }
             });
             if (updateArtista) {
-                let resposta = {
-                    totalizadores: {
-                        totalLinhas: 1,
-                    },
-                    dados: updateArtista
-                };
-
-                return response.json(resposta);
+                return response.json(updateArtista);
             };
         } catch (error) {
             return response.status(500).json(
